@@ -1,0 +1,25 @@
+# Gradle / Android build outputs
+.gradle/
+build/
+**/build/
+local.properties
+*.iml
+.DS_Store
+
+# sherpa-onnx AAR: vendored at build time, never committed (binary).
+# CI downloads it into app/libs/ (see app/libs/REGENERATE.md).
+app/libs/*.aar
+
+# Decoded debug keystore (binary, generated from keystore/debug.keystore.b64).
+**/voxflow/debug.keystore
+
+# Release keystore material must NEVER be committed.
+*.jks
+*.keystore
+!keystore/debug.keystore.b64
+PASSWORD.txt
+BASE64.txt
+
+# Local IDE
+.idea/
+*.hprof

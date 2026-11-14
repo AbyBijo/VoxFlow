@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  VoxFlow Slice 1 manifest.
+  Single Activity. No splash Activity, no SplashScreen API — the app opens
+  straight onto Home (see docs/risks.md, "Splash / launch flow").
+  singleTop: repeated launcher taps never stack a second Home.
+  No foreground service in Slice 1 (playback service is Slice 2);
+  playback is in-process and stops if the app is killed — stated plainly
+  in docs/risks.md, not hidden.
+-->
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <!-- Network is used ONLY to download the Kokoro model once, on first
+         run, from the sherpa-onnx release. Synthesis itself is offline. -->
+    <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+
+    <application
+        android:name=".VoxFlowApp"
+        android:allowBackup="false"
+        android:icon="@mipmap/ic_launcher"
+        android:label="@string/app_name"
+        android:roundIcon="@mipmap/ic_launcher_round"
+        android:supportsRtl="true"
+        android:theme="@style/Theme.VoxFlow">
+        <activity
+            android:name=".MainActivity"
+            android:exported="true"
+            android:launchMode="singleTop"
+            android:theme="@style/Theme.VoxFlow">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
+    </application>
+
+</manifest>

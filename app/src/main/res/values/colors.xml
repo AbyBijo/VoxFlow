@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Window background matches the Home background: cold start shows
+         no flash and no splash (docs/risks.md, splash / launch flow). -->
+    <color name="window_background">#FFFFFF</color>
+    <color name="ic_launcher_background">#111111</color>
+</resources>
