@@ -76,11 +76,13 @@ class MainActivity : ComponentActivity() {
                     android.util.Log.w(
                         "Jank",
                         "janky ${ms.toInt()}ms screen=Home " +
-                            "jank=$jankFrames/$frames worst=${worstMs.toInt()}ms",
+                        "jank=$jankFrames/$frames worst=${worstMs.toInt()}ms",
                     )
                 }
             }
-            holder.state.putState("screen", "Home")
+            // getHolderForHierarchy's state is nullable; skip the tag
+            // (don't crash) if no state holder exists for this window.
+            holder.state?.putState("screen", "Home")
         }
     }
 }
