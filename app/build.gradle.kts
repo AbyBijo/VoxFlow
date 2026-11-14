@@ -41,7 +41,7 @@ val sherpaAar = file("libs/sherpa-onnx-static-link-onnxruntime-1.13.3.aar")
 if (!sherpaAar.exists()) {
     throw GradleException(
         "Missing ${sherpaAar.path}. Download it first — see app/libs/REGENERATE.md " +
-            "(CI does this automatically before building)."
+        "(CI does this automatically before building)."
     )
 }
 
@@ -99,12 +99,18 @@ android {
         sourceCompatibility = JavaVersion.VERSION_17
         targetCompatibility = JavaVersion.VERSION_17
     }
+
     kotlinOptions {
         jvmTarget = "17"
     }
+
     buildFeatures {
         compose = true
+        // AGP 8.10.1 does not generate BuildConfig by default; MainActivity
+        // uses BuildConfig.DEBUG for the debug-only JankStats wiring.
+        buildConfig = true
     }
+
     packaging {
         resources {
             excludes += "/META-INF/{AL2.0,LGPL2.1}"
@@ -127,11 +133,9 @@ dependencies {
     implementation(libs.okhttp)
     implementation(libs.commons.compress)
     implementation(libs.kotlinx.coroutines.android)
-
     // sherpa-onnx 1.13.3 (static-link ONNX Runtime). No Maven coordinate
     // exists upstream — vendored AAR, fetched in CI (app/libs/REGENERATE.md).
     implementation(files("libs/sherpa-onnx-static-link-onnxruntime-1.13.3.aar"))
-
     testImplementation(libs.junit)
     testImplementation(libs.kotlinx.coroutines.test)
     debugImplementation(libs.androidx.compose.ui.tooling.preview)
