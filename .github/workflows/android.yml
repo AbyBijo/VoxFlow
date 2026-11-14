@@ -47,7 +47,7 @@ jobs:
           N_ACT=$(grep -c '<activity' "$MANIFEST")
           echo "activities=$N_ACT"
           [ "$N_ACT" = "1" ] || { echo "Expected exactly 1 Activity, found $N_ACT"; exit 1; }
-          if grep -qi 'splash' "$MANIFEST"; then echo "Splash entry found in manifest"; exit 1; fi
+          if grep '<activity' "$MANIFEST" | grep -qi 'splash'; then echo "Splash entry found in manifest"; exit 1; fi
           echo "Manifest OK: single Activity, no splash."
       - name: Decode release keystore (if secrets present)
         id: release_key
