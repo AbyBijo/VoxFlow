@@ -21,11 +21,17 @@ jobs:
         uses: gradle/actions/setup-gradle@v4
         with:
           gradle-version: '8.11.1'
-      - name: Set up Android SDK
-        uses: android-actions/setup-android@v3
-      - name: Install SDK packages
+      - name: Install SDK packages (runner's preinstalled SDK)
         run: |
-          sdkmanager "platforms;android-36" "build-tools;36.0.0" "platform-tools"
+          echo "ANDROID_HOME=$ANDROID_HOME"
+          echo "ANDROID_SDK_ROOT=$ANDROID_SDK_ROOT"
+          SDKMANAGER="$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager"
+          if [ ! -x "$SDKMANAGER" ]; then SDKMANAGER="$ANDROID_SDK_ROOT/cmdline-tools/latest/bin/sdkmanager"; fi
+          if [ ! -x "$SDKMANAGER" ]; then SDKMANAGER="$(command -v sdkmanager)"; fi
+          echo "Using sdkmanager: $SDKMANAGER"
+          [ -n "$SDKMANAGER" ] || { echo "sdkmanager not found"; exit 1; }
+          yes | "$SDKMANAGER" --licenses >/dev/null || true
+          "$SDKMANAGER" "platforms;android-36" "build-tools;36.0.0" "platform-tools"
       - name: Fetch sherpa-onnx AAR (pinned, verified)
         run: |
           mkdir -p app/libs
@@ -67,10 +73,6 @@ jobs:
           APKSIGNER="$ANDROID_HOME/build-tools/36.0.0/apksigner"
           DEBUG_APK=app/build/outputs/apk/debug/app-debug.apk
           RELEASE_APK=app/build/outputs/apk/release/app-release.apk
-          echo "== debug =="
-          "$APKSIGNER" verify --print-certs "$DEBUG_APK"
-          echo "== release =="
-          "$APKSIGNER" verify --print-certs "$RELEASE_APK"
           DEBUG_FP=$("$APKSIGNER" verify --print-certs "$DEBUG_APK" | grep -i 'SHA-256 digest' | head -1 | awk '{print $NF}')
           RELEASE_FP=$("$APKSIGNER" verify --print-certs "$RELEASE_APK" | grep -i 'SHA-256 digest' | head -1 | awk '{print $NF}')
           echo "debug SHA-256:   $DEBUG_FP"
