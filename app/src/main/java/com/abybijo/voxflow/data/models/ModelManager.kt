@@ -42,7 +42,14 @@ class ModelManager(
     private val httpClient: OkHttpClient,
     private val ioDispatcher: CoroutineDispatcher = Dispatchers.IO,
 ) {
-    private val modelsDir = File(appContext.filesDir, "models")
+    // filesDir always exists on Android; modelsDir does not until it is
+    // created. usableSpace on a non-existent path returns 0, so the
+    // free-space check must run against filesDir (and only after
+    // modelsDir.mkdirs()), never against a modelsDir that may not exist
+    // yet — otherwise every first install fails with "not enough storage"
+    // even on a phone with gigabytes free.
+    private val filesDir = appContext.filesDir
+    private val modelsDir = File(filesDir, "models")
     private val stagingDir = File(appContext.cacheDir, "model-staging")
     private val downloadDir = File(appContext.cacheDir, "model-download")
 
@@ -75,15 +82,19 @@ class ModelManager(
             onState(it)
         }
         try {
+            // Create the dirs first: usableSpace on a path that does not
+            // exist yet returns 0, which used to block every first
+            // install. Check free space on filesDir, which always exists.
             // Free-space headroom: size x 1.5 (archive + extracted).
-            val free = modelsDir.usableSpace
-            if (free < pack.sizeBytes * 3 / 2) {
-                return@withContext State.Error(
-                    "Not enough storage for the voice (${pack.sizeBytes / 1_048_576} MB needed)."
-                ).also { onState(it) }
-            }
+            modelsDir.mkdirs()
             downloadDir.mkdirs()
             stagingDir.mkdirs()
+            val free = filesDir.usableSpace
+            if (free < requiredBytes(pack.sizeBytes)) {
+                return@withContext State.Error(
+                    storageErrorMessage(free, pack.sizeBytes)
+                ).also { onState(it) }
+            }
             val archive = File(downloadDir, "${pack.id}.tar.bz2")
             download(pack, archive) { p -> onState(State.Downloading(p)) }
             onState(State.Verifying)
@@ -240,6 +251,14 @@ class ModelManager(
     }
 
     companion object {
+        /** Free space an install needs: archive + extracted files. */
+        fun requiredBytes(sizeBytes: Long): Long = sizeBytes * 3 / 2
+
+        /** Storage error that states the real numbers, not just the model size. */
+        fun storageErrorMessage(freeBytes: Long, sizeBytes: Long): String =
+            "Not enough storage: ${freeBytes / 1_048_576} MB free, " +
+                "${requiredBytes(sizeBytes) / 1_048_576} MB needed for the voice."
+
         fun sha256(file: File): String {
             val digest = MessageDigest.getInstance("SHA-256")
             FileInputStream(file).use { input ->
